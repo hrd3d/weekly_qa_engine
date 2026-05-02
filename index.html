@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopee | QA Engine </title>
+<link rel="icon" href="logo.png">
+<link rel="shortcut icon" href="logo.png">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+/* HEADER */
+header {
+    background: #ee4d2d;
+    color: white;
+    padding: 20px 30px; /* 🔥 add left/right space */
+    font-size: 20px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    z-index: 1000;
+}
+
+header {
+    box-sizing: border-box; /* 🔥 prevents overflow */
+}
+
+
+/* CONTAINER */
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 90px auto;
+}
+
+/* CARD */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* INPUTS */
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+
+/* CHECKBOX */
+label {
+    margin-right: 10px;
+}
+
+/* BUTTON */
+button {
+    padding: 10px;
+    background: #ee4d2d;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* RESULT */
+.result-block {
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* DARK MODE */
+.dark body { background: #121212; }
+.dark .card { background: #1e1e1e; color: #eee; }
+
+.dropdown {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 999;
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #ee4d2d;
+    color: white;
+}
+
+.mode-btn {
+    border: 2px solid white;
+    background: transparent;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px; /* square with slight rounding */
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+.mode-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.card > div[style*="display:flex"] > div {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes pulseRed {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69, 0.6);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 10px rgba(220,53,69, 0.9);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69, 0.6);
+    }
+}
+
+.pulse-red {
+    animation: pulseRed 1.8s ease-in-out infinite;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <img src="logo.png" style="height:40px;">
+        <span>SupportZebra x Shopee Philippines | WEEKLY QA ENGINE</span>
+    </div>
+
+    <button class="mode-btn" onclick="toggleMode()">🌙</button>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Upload QA File</h3>
+
+<input type="file" id="excelFile" accept=".xlsx">
+
+<div style="display:flex; gap:12px; margin-top:10px; align-items:stretch;">
+
+    <div style="position:relative; flex:1;">
+        <input type="text" id="agentFilter" placeholder="Search Agent">
+        <div id="agentDropdown" class="dropdown"></div>
+    </div>
+
+    <div style="position:relative; flex:1;">
+        <input type="text" id="weekFilter" placeholder="Search Week (10 to 18)">
+        <div id="weekDropdown" class="dropdown"></div>
+    </div>
+
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;">
+    
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="gbe"> GBE
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="ecom"> ECOM
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="prob"> PROB
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="root"> ROOT
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="sol"> SOL
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="sop"> SOP
+    </label>
+
+</div>
+
+<br>
+<button onclick="processExcel()">EXECUTE</button>
+
+</div>
+
+<div id="results" class="card"></div>
+
+</div>
+
+<script>
+let excelData = [];
+
+// LOAD FILE
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+
+    if (!file || file.name !== "internal.xlsx") {
+        alert("Only internal.xlsx allowed.");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        excelData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        extractFilters();
+
+        setupDropdown("agentFilter", "agentDropdown", agents);
+        setupDropdown("weekFilter", "weekDropdown", weeks);
+
+        alert("Excel loaded.");
+    };
+
+    reader.readAsArrayBuffer(file);
+});
+
+// PROCESS
+function processExcel() {
+
+    if (!excelData.length) {
+        alert("Upload file first.");
+        return;
+    }
+
+    const agent = document.getElementById("agentFilter").value.toLowerCase();
+    const week = document.getElementById("weekFilter").value.toLowerCase();
+
+if (!agent.trim() || !week.trim()) {
+    alert("Both Agent and Week are required.");
+    return;
+}
+
+let weekNum = parseInt(week, 10);
+
+if (isNaN(weekNum) || weekNum < 10) {
+    alert("Week must be 10 or above.");
+    return;
+}
+
+    const show = {
+        gbe: document.getElementById("gbe").checked,
+        ecom: document.getElementById("ecom").checked,
+        prob: document.getElementById("prob").checked,
+        root: document.getElementById("root").checked,
+        sol: document.getElementById("sol").checked,
+        sop: document.getElementById("sop").checked
+    };
+
+const anyChecked = Object.values(show).some(v => v);
+
+if (!anyChecked) {
+    alert("Select at least one parameter (GBE, ECOM, etc.)");
+    return;
+}
+
+    let output = "";
+
+    for (let i = 1; i < excelData.length; i++) {
+
+        const row = excelData[i];
+
+        const agentCol = (row[10] || "").toLowerCase();
+        const weekCol = (row[6] || "").toLowerCase();
+
+        if (!agentCol.includes(agent)) continue;
+        if (!weekCol.includes(week)) continue;
+
+let caseId = row[23] || "N/A";
+
+// parse score properly
+let rawScore = row[53] || "";
+let scoreNum = parseFloat(rawScore);
+let score = !isNaN(scoreNum) ? Math.round(scoreNum) + "%" : "N/A";
+
+let bgColor = "";
+let textColor = "";
+
+if (!isNaN(scoreNum)) {
+    if (scoreNum <= 75) {
+        bgColor = "#dc3545"; // red
+        textColor = "white";
+    } else if (scoreNum <= 90) {
+        bgColor = "#fd7e14"; // orange
+        textColor = "white";
+    } else {
+        bgColor = "#28a745"; // green
+        textColor = "white";
+    }
+}
+
+// 🔥 styles
+let isCritical = scoreNum <= 75;
+
+let headerClass = isCritical ? "pulse-red" : "";
+
+let headerStyle = bgColor
+    ? `background:${bgColor};color:${textColor};padding:6px;border-radius:4px;`
+    : "";
+
+let block = `<div class="result-block">
+
+<div class="${headerClass}" style="${headerStyle}">
+<b>Case ID:</b> ${caseId} | <b>QA Score:</b> ${score}
+</div>
+
+<br>
+`;
+
+if (show.gbe && row[31]) block += `<b>GBE:</b> ${row[31]}<br>`;
+if (show.ecom && row[34]) block += `<b>ECOM:</b> ${row[34]}<br>`;
+if (show.prob && row[37]) block += `<b>PROB:</b> ${row[37]}<br>`;
+if (show.root && row[40]) block += `<b>ROOT:</b> ${row[40]}<br>`;
+if (show.sol && row[43]) block += `<b>SOL:</b> ${row[43]}<br>`;
+if (show.sop && row[46]) block += `<b>SOP:</b> ${row[46]}<br>`;
+
+block += `</div>`;
+
+
+        output += block;
+    }
+
+    document.getElementById("results").innerHTML =
+        output || "No matching data.";
+}
+
+// DARK MODE
+function toggleMode(){
+    document.documentElement.classList.toggle("dark");
+}
+
+let agents = [];
+let weeks = [];
+
+// EXTRACT UNIQUE VALUES AFTER FILE LOAD
+function extractFilters() {
+    const agentSet = new Set();
+    const weekSet = new Set();
+
+    for (let i = 1; i < excelData.length; i++) {
+        if (excelData[i][10]) agentSet.add(excelData[i][10]);
+        if (excelData[i][6]) weekSet.add(excelData[i][6]);
+    }
+
+    agents = [...agentSet].sort();
+    weeks = [...weekSet].sort();
+}
+
+function setupDropdown(inputId, dropdownId, dataList) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    input.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+
+        if (query.length < 3) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        const filtered = dataList.filter(item =>
+            item.toLowerCase().includes(query)
+        );
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        dropdown.innerHTML = filtered.slice(0, 50).map(item =>
+            `<div class="dropdown-item">${item}</div>`
+        ).join("");
+
+        dropdown.style.display = "block";
+
+        document.querySelectorAll(`#${dropdownId} .dropdown-item`)
+            .forEach(el => {
+                el.onclick = () => {
+                    input.value = el.innerText;
+                    dropdown.style.display = "none";
+                };
+            });
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!e.target.closest(`#${inputId}`) && !e.target.closest(`#${dropdownId}`)) {
+            dropdown.style.display = "none";
+        }
+    });
+}
+
+
+</script>
+
+</body>
+</html>
