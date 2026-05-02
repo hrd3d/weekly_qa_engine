@@ -212,7 +212,7 @@ button {
     </label>
 
     <label style="display:flex;align-items:center;gap:5px;">
-        <input type="checkbox" id="sol"> SOL
+        <input type="checkbox" id="sol"> SOLUTION
     </label>
 
     <label style="display:flex;align-items:center;gap:5px;">
@@ -237,8 +237,8 @@ let excelData = [];
 document.getElementById('excelFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
 
-    if (!file || file.name !== "internal.xlsx") {
-        alert("Only internal.xlsx allowed.");
+    if (!file || file.name !== "internal1801.xlsx") {
+        alert("Invalid excel file! Please contact the developer for assistance.");
         return;
     }
 
@@ -255,7 +255,7 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
         setupDropdown("agentFilter", "agentDropdown", agents);
         setupDropdown("weekFilter", "weekDropdown", weeks);
 
-        alert("Excel loaded.");
+        alert("QA file loaded.");
     };
 
     reader.readAsArrayBuffer(file);
@@ -265,7 +265,7 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
 function processExcel() {
 
     if (!excelData.length) {
-        alert("Upload file first.");
+        alert("Upload file first!");
         return;
     }
 
@@ -273,14 +273,14 @@ function processExcel() {
     const week = document.getElementById("weekFilter").value.toLowerCase();
 
 if (!agent.trim() || !week.trim()) {
-    alert("Both Agent and Week are required.");
+    alert("Both "Agent Name" and "Week Performance" are required.");
     return;
 }
 
 let weekNum = parseInt(week, 10);
 
 if (isNaN(weekNum) || weekNum < 10) {
-    alert("Week must be 10 or above.");
+    alert("Week must be "Weel 10 and above"!");
     return;
 }
 
