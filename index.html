@@ -8,6 +8,7 @@
 <link rel="shortcut icon" href="logo.png">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
@@ -180,6 +181,16 @@ a:hover {
     text-decoration: underline;
 }
 
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 260px;
+}
+
+body {
+    overflow-x: hidden;
+}
+
 </style>
 </head>
 
@@ -243,9 +254,9 @@ a:hover {
 
 </div>
 
-<br>
-<button onclick="processExcel()">EXECUTE</button>
-
+<div style="display:flex; gap:10px;">
+    <button onclick="processExcel()">EXECUTE</button>
+    <button onclick="showWeekOverview()">WEEK OVERVIEW</button>
 </div>
 
 <div id="results" class="card"></div>
@@ -370,22 +381,19 @@ let block = `<div class="result-block">
 
 <div class="${headerClass}" style="${headerStyle}">
 <b>Case ID:</b>
-<a href="https://cs.shopee.ph/portal/inhouse/agent-case/detail/${caseId}" target="_blank" style="color:inherit; text-decoration:underline;">
-${caseId}
-
-</a> 
-| <b>QA Score:</b> ${score}
+<a href="https://cs.shopee.ph/portal/inhouse/agent-case/detail/${caseId}" target="_blank" style="color:inherit; text-decoration:underline;">${caseId}
+</a>| <b>QA Score:</b> ${score}
 </div>
 
 <br>
 `;
 
-if (show.gbe && row[31]) block += `<b>GBE:</b> ${row[31]}<br>`;
-if (show.ecom && row[34]) block += `<b>ECOM:</b> ${row[34]}<br>`;
-if (show.prob && row[37]) block += `<b>PROB:</b> ${row[37]}<br>`;
-if (show.root && row[40]) block += `<b>ROOT:</b> ${row[40]}<br>`;
-if (show.sol && row[43]) block += `<b>SOL:</b> ${row[43]}<br>`;
-if (show.sop && row[46]) block += `<b>SOP:</b> ${row[46]}<br>`;
+if (show.gbe && row[31]) block += `<b>Greetings and Basic Etiquette:</b> ${row[31]}<br>`;
+if (show.ecom && row[34]) block += `<b>Effective Communication:</b> ${row[34]}<br>`;
+if (show.prob && row[37]) block += `<b>Problem Identification:</b> ${row[37]}<br>`;
+if (show.root && row[40]) block += `<b>Root Cause:</b> ${row[40]}<br>`;
+if (show.sol && row[43]) block += `<b>Solution:</b> ${row[43]}<br>`;
+if (show.sop && row[46]) block += `<b>SOP Compliance:</b> ${row[46]}<br>`;
 
 block += `</div>`;
 
@@ -398,9 +406,6 @@ block += `</div>`;
 }
 
 // DARK MODE
-function toggleMode(){
-    document.body.classList.toggle("dark");
-}
 
 let agents = [];
 let weeks = [];
@@ -469,8 +474,268 @@ function toggleMode(){
     btn.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
 }
 
+function showWeekOverview() {
+
+    const agent = document.getElementById("agentFilter").value.toLowerCase();
+    const weekInput = document.getElementById("weekFilter").value;
+
+    if (!agent || !weekInput) {
+        alert("Agent and Week required.");
+        return;
+    }
+
+    let selectedWeek = parseInt(weekInput, 10);
+
+    if (isNaN(selectedWeek) || selectedWeek < 10) {
+        alert("Invalid week.");
+        return;
+    }
+
+    let targetWeeks = [
+        selectedWeek - 3,
+        selectedWeek - 2,
+        selectedWeek - 1,
+        selectedWeek
+    ];
+
+    let weekData = {};
+
+    targetWeeks.forEach(w => {
+        weekData[w] = {
+            total: 0,
+            gbe: 0,
+            ecom: 0,
+            prob: 0,
+            root: 0,
+            sol: 0,
+            sop: 0,
+            score: []
+        };
+    });
+
+function isIssue(val) {
+    if (!val) return false;
+
+    let text = val.toString().toLowerCase().trim();
+
+    // 🔥 KEYWORDS THAT INDICATE REAL QA ISSUE
+    return (
+        text !== "n/a" &&
+        text !== "" &&
+        text !== "na" &&
+        (
+            text.includes("miss") ||
+            text.includes("fail") ||
+            text.includes("incorrect") ||
+            text.includes("no ") ||
+            text.includes("lack") ||
+            text.includes("error")
+        )
+    );
+}
+
+    // 🔥 LOOP
+    for (let i = 1; i < excelData.length; i++) {
+        const row = excelData[i];
+
+        const agentCol = (row[10] || "").toLowerCase();
+
+        let rawWeek = row[6] || "";
+        let match = rawWeek.toString().match(/\d+/);
+        if (!match) continue;
+
+        let weekCol = parseInt(match[0]);
+
+        if (!agentCol.includes(agent)) continue;
+        if (!targetWeeks.includes(weekCol)) continue;
+
+        // count total cases
+        weekData[weekCol].total++;
+
+        let score = parseFloat(row[53]) || 0;
+        weekData[weekCol].score.push(score);
+
+        // 🔥 STRICT CHECK (REAL FIX)
+if (isIssue(row[31])) weekData[weekCol].gbe++;
+if (isIssue(row[34])) weekData[weekCol].ecom++;
+if (isIssue(row[37])) weekData[weekCol].prob++;
+if (isIssue(row[40])) weekData[weekCol].root++;
+if (isIssue(row[43])) weekData[weekCol].sol++;
+if (isIssue(row[46])) weekData[weekCol].sop++;
+    }
+
+    let labels = targetWeeks;
+
+    function avg(arr) {
+        if (!arr.length) return 0;
+        return Math.round(arr.reduce((a,b)=>a+b,0) / arr.length);
+    }
+
+    // 🔥 BUILD ARRAYS
+function percent(value, total) {
+    if (!total) return 0;
+
+    let rate = (value / total) * 100;
+
+    return Math.min(100, Math.max(0, Math.round(rate)));
+}
+
+let gbe = labels.map(w => percent(weekData[w].gbe, weekData[w].total));
+let ecom = labels.map(w => percent(weekData[w].ecom, weekData[w].total));
+let prob = labels.map(w => percent(weekData[w].prob, weekData[w].total));
+let root = labels.map(w => percent(weekData[w].root, weekData[w].total));
+let sol  = labels.map(w => percent(weekData[w].sol, weekData[w].total));
+let sop  = labels.map(w => percent(weekData[w].sop, weekData[w].total));
+
+let score = labels.map(w => avg(weekData[w].score));
+
+document.getElementById("overviewModal").style.display = "block";
+
+// 🔥 SINGLE render (correct timing)
+setTimeout(() => {
+    renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score);
+}, 120);
+
+    renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score);
+}
+function closeOverview() {
+    document.getElementById("overviewModal").style.display = "none";
+}
+
+let trendChart, volumeChart;
+
+function renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score) {
+
+    // 🔵 TOP CHART
+    if (trendChart) trendChart.destroy();
+
+    trendChart = new Chart(document.getElementById("trendChart"), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'GBE', data: gbe, borderColor: '#4dabf7', tension: 0.4 },
+                { label: 'ECOM', data: ecom, borderColor: '#51cf66', tension: 0.4 },
+                { label: 'PROB', data: prob, borderColor: '#ffd43b', tension: 0.4 },
+                { label: 'ROOT', data: root, borderColor: '#845ef7', tension: 0.4 },
+                { label: 'SOL', data: sol, borderColor: '#ff6b6b', tension: 0.4 },
+                { label: 'SOP', data: sop, borderColor: '#f783ac', tension: 0.4 }
+            ]
+        },
+       options: {
+    responsive: true,
+maintainAspectRatio: false,
+    scales: {
+       y: {
+    beginAtZero: true,
+    max: 100,
+    title: {
+        display: true,
+        text: 'Error Rate (%)'
+    }
+},
+        x: {
+            grid: {
+                display: false
+            }
+        }
+    }
+}
+    });
+
+    // 🟢 BOTTOM CHART
+if (volumeChart) volumeChart.destroy();
+    volumeChart = new Chart(document.getElementById("volumeChart"), {
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                type: 'bar',
+                label: 'Average QA Score (%)',
+                data: score,
+                backgroundColor: '#2f9e44',
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            x: {
+                grid: { display: false }
+            },
+            y: {
+                beginAtZero: true,
+                max: 100, // 🔥 IMPORTANT (since it's %)
+                grid: { display: false },
+                title: {
+                    display: true,
+                    text: 'QA Score (%)'
+                }
+            }
+        }
+    }
+});
+}
+
 
 </script>
 
+<div id="overviewModal" style="
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    z-index:2000;
+    overflow:hidden; /* 🔥 REMOVE SCROLL */
+">
+
+<div style="
+    background:#fff;
+    margin:20px auto;
+    padding:20px;
+    width:95%;
+    max-width:900px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+">
+
+<h2>Weekly Overview</h2>
+<button onclick="closeOverview()" style="
+    align-self:flex-start;
+    padding:6px 14px;
+    font-size:14px;
+    border:none;
+    border-radius:6px;
+    background:#f04b2f;
+    color:#fff;
+    cursor:pointer;
+">
+    Close
+</button>
+
+<div style="
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+">
+
+<div class="chart-container">
+    <canvas id="trendChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <canvas id="volumeChart"></canvas>
+</div>
+
+</div>
+
+</div>
+</div>
 </body>
 </html>
