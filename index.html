@@ -176,6 +176,10 @@ body.dark .dropdown {
     animation: pulseRed 1.8s ease-in-out infinite;
 }
 
+a:hover {
+    text-decoration: underline;
+}
+
 </style>
 </head>
 
@@ -365,7 +369,12 @@ let headerStyle = bgColor
 let block = `<div class="result-block">
 
 <div class="${headerClass}" style="${headerStyle}">
-<b>Case ID:</b> ${caseId} | <b>QA Score:</b> ${score}
+<b>Case ID:</b>
+<a href="https://cs.shopee.ph/portal/inhouse/agent-case/detail/${caseId}" target="_blank" style="color:inherit; text-decoration:underline;">
+${caseId}
+
+</a> 
+| <b>QA Score:</b> ${score}
 </div>
 
 <br>
