@@ -256,7 +256,8 @@ body {
 
 <div style="display:flex; gap:10px;">
     <button onclick="processExcel()">EXECUTE</button>
-    <button onclick="showWeekOverview()">WEEK OVERVIEW</button>
+    <button onclick="showWeekOverview()">AGENT OVERVIEW</button>
+    <button onclick="openTLModal()">TL OVERVIEW</button>
 </div>
 
 <div id="results" class="card"></div>
@@ -474,6 +475,44 @@ function toggleMode(){
     btn.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
 }
 
+function openTLModal() {
+    document.getElementById("tlModal").style.display = "block";
+    document.getElementById("tlFilter").addEventListener("input", function () {
+
+    const val = this.value.toLowerCase();
+    const dropdown = document.getElementById("tlDropdown");
+    dropdown.innerHTML = "";
+
+    if (val.length < 3) {
+        dropdown.style.display = "none";
+        return;
+    }
+
+    let tlList = [...new Set(excelData.slice(1).map(r => r[15]))];
+
+    let filtered = tlList
+        .filter(tl => tl && tl.toLowerCase().includes(val))
+        .slice(0, 6);
+
+    dropdown.innerHTML = filtered.map(tl =>
+        `<div class="dropdown-item">${tl}</div>`
+    ).join("");
+
+    dropdown.style.display = "block";
+
+    document.querySelectorAll("#tlDropdown .dropdown-item").forEach(el => {
+        el.onclick = () => {
+            document.getElementById("tlFilter").value = el.innerText;
+            dropdown.style.display = "none";
+        };
+    });
+});
+}
+
+function closeTLModal() {
+    document.getElementById("tlModal").style.display = "none";
+}
+
 function showWeekOverview() {
 
     const agent = document.getElementById("agentFilter").value.toLowerCase();
@@ -681,6 +720,91 @@ if (volumeChart) volumeChart.destroy();
 });
 }
 
+function processTL() {
+
+    const tl = document.getElementById("tlFilter").value.toLowerCase();
+    const week = document.getElementById("tlWeekFilter").value;
+
+    if (!tl || !week) {
+        alert("TL and Week required.");
+        return;
+    }
+
+    let weekNum = parseInt(week, 10);
+
+    if (isNaN(weekNum) || weekNum < 10) {
+        alert("Invalid week.");
+        return;
+    }
+
+    let agentMap = {};
+
+    for (let i = 1; i < excelData.length; i++) {
+
+        let row = excelData[i];
+
+        let tlCol = (row[15] || "").toLowerCase();
+        let agent = row[10] || "";
+
+        let rawWeek = row[6] || "";
+        let match = rawWeek.toString().match(/\d+/);
+        if (!match) continue;
+
+        let weekCol = parseInt(match[0]);
+
+        if (!tlCol.includes(tl)) continue;
+        if (weekCol !== weekNum) continue;
+
+        let score = parseFloat(row[53]);
+        if (isNaN(score)) continue;
+
+        if (!agentMap[agent]) agentMap[agent] = [];
+        agentMap[agent].push(score);
+    }
+
+    let agentAverages = [];
+
+    for (let agent in agentMap) {
+        let scores = agentMap[agent];
+        let avg = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
+        agentAverages.push({ agent, avg });
+    }
+
+    if (!agentAverages.length) {
+        document.getElementById("tlResult").innerHTML = "No data found.";
+        return;
+    }
+
+    let tlAvg = Math.round(
+        agentAverages.reduce((a,b)=>a + b.avg, 0) / agentAverages.length
+    );
+
+    agentAverages.sort((a,b)=>b.avg - a.avg);
+
+    let html = `
+    <div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:15px;font-weight:bold;">
+        Team Leader Average Score: ${tlAvg}%
+    </div>
+    `;
+
+    html += agentAverages.map(a => {
+        let color = a.avg >= 90 ? "#28a745" :
+                    a.avg >= 75 ? "#fd7e14" :
+                    "#dc3545";
+
+        return `
+        <div style="display:flex;justify-content:space-between;padding:10px;margin-bottom:6px;background:#fff;border-radius:6px;border-left:5px solid ${color};">
+            <span>${a.agent}</span>
+            <b>${a.avg}%</b>
+        </div>
+        `;
+    }).join("");
+
+    document.getElementById("tlResult").innerHTML = html;
+}
+
+
+
 
 </script>
 
@@ -737,5 +861,60 @@ if (volumeChart) volumeChart.destroy();
 
 </div>
 </div>
+
+<div id="tlModal" style="
+display:none;
+position:fixed;
+top:0; left:0;
+width:100%; height:100%;
+background:rgba(0,0,0,0.7);
+z-index:3000;
+">
+
+<div style="
+background:#fff;
+margin:20px auto;
+padding:20px;
+width:90%;
+max-width:800px;
+border-radius:10px;
+">
+
+<h2>Team Leader Overview</h2>
+
+<button onclick="closeTLModal()" style="
+padding:6px 14px;
+background:#f04b2f;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+">Close</button>
+
+<br><br>
+
+<div style="display:flex; gap:10px;">
+
+<div style="position:relative; flex:1;">
+    <input type="text" id="tlFilter" placeholder="Search TL Name">
+    <div id="tlDropdown" class="dropdown"></div>
+</div>
+
+<div style="position:relative; flex:1;">
+    <input type="text" id="tlWeekFilter" placeholder="Search Week (10 - 18)">
+    <div id="tlWeekDropdown" class="dropdown"></div>
+</div>
+
+<button onclick="processTL()">EXECUTE</button>
+
+</div>
+
+<br>
+
+<div id="tlResult"></div>
+
+</div>
+</div>
+
 </body>
 </html>
