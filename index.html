@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="shortcut icon" href="logo.png">
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="190526.js"></script>
 
 <style>
 body {
@@ -118,7 +118,8 @@ body.dark .dropdown {
     max-height: 200px;
     overflow-y: auto;
     display: none;
-    z-index: 999;
+    z-index: 9999;
+    box-sizing: border-box;
 }
 
 .dropdown-item {
@@ -208,9 +209,6 @@ body {
 <div class="container">
 
 <div class="card">
-<h3>Upload QA File</h3>
-
-<input type="file" id="excelFile" accept=".xlsx">
 
 <div style="display:flex; gap:12px; margin-top:10px; align-items:stretch;">
 
@@ -219,10 +217,15 @@ body {
         <div id="agentDropdown" class="dropdown"></div>
     </div>
 
-    <div style="position:relative; flex:1;">
-        <input type="text" id="weekFilter" placeholder="Search Week (10 to 19)">
-        <div id="weekDropdown" class="dropdown"></div>
-    </div>
+<div style="flex:1;">
+    <input 
+        type="number"
+        id="weekFilter"
+        placeholder="Week (10 - 19)"
+        min="10"
+        max="19"
+    >
+</div>
 
 </div>
 
@@ -265,41 +268,13 @@ body {
 </div>
 
 <script>
-let excelData = [];
 
-// LOAD FILE
-document.getElementById('excelFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-
-    if (!file || file.name !== "internal1904.xlsx") {
-        alert("Invalid excel file! Please contact the developer for assistance.");
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function(evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        excelData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        extractFilters();
-
-        setupDropdown("agentFilter", "agentDropdown", agents);
-        setupDropdown("weekFilter", "weekDropdown", weeks);
-
-        alert("QA file loaded.");
-    };
-
-    reader.readAsArrayBuffer(file);
-});
 
 // PROCESS
 function processExcel() {
 
     if (!excelData.length) {
-        alert("Upload file first!");
+        alert("QA data not loaded.");
         return;
     }
 
@@ -336,21 +311,24 @@ if (!anyChecked) {
 
     let output = "";
 
-    for (let i = 1; i < excelData.length; i++) {
+   for (let i = 0; i < excelData.length; i++) {
 
-        const row = excelData[i];
+const row = excelData[i];
 
-        const agentCol = (row[10] || "").toLowerCase();
-        const weekCol = (row[6] || "").toLowerCase();
+const agentCol = (row["Agent Name"] || "").toLowerCase();
+
+const weekCol = (row["Performance Week"] || "").toLowerCase();
 
         if (!agentCol.includes(agent)) continue;
         if (!weekCol.includes(week)) continue;
 
-let caseId = row[23] || "N/A";
+let caseId = row["Case ID"] || "N/A";
 
 // parse score properly
-let rawScore = row[53] || "";
-let scoreNum = parseFloat(rawScore);
+let rawScore = row["Total Score"] || "";
+let scoreNum = parseFloat(
+    rawScore.toString().replace("%","")
+);
 let score = !isNaN(scoreNum) ? Math.round(scoreNum) + "%" : "N/A";
 
 let bgColor = "";
@@ -389,12 +367,23 @@ let block = `<div class="result-block">
 <br>
 `;
 
-if (show.gbe && row[31]) block += `<b>Greetings and Basic Etiquette:</b> ${row[31]}<br>`;
-if (show.ecom && row[34]) block += `<b>Effective Communication:</b> ${row[34]}<br>`;
-if (show.prob && row[37]) block += `<b>Problem Identification:</b> ${row[37]}<br>`;
-if (show.root && row[40]) block += `<b>Root Cause:</b> ${row[40]}<br>`;
-if (show.sol && row[43]) block += `<b>Solution:</b> ${row[43]}<br>`;
-if (show.sop && row[46]) block += `<b>SOP Compliance:</b> ${row[46]}<br>`;
+if (show.gbe && row["Greeting & Basic Etiquette (GBE) Observations"])
+    block += `<b>Greetings and Basic Etiquette:</b> ${row["Greeting & Basic Etiquette (GBE) Observations"]}<br>`;
+
+if (show.ecom && row["Effective Communication (ECOM) Observations"])
+    block += `<b>Effective Communication:</b> ${row["Effective Communication (ECOM) Observations"]}<br>`;
+
+if (show.prob && row["Problem Identification (PROB) Observations"])
+    block += `<b>Problem Identification:</b> ${row["Problem Identification (PROB) Observations"]}<br>`;
+
+if (show.root && row["Root Cause (ROOT) Observations"])
+    block += `<b>Root Cause:</b> ${row["Root Cause (ROOT) Observations"]}<br>`;
+
+if (show.sol && row["Solution (SOL) Observations"])
+    block += `<b>Solution:</b> ${row["Solution (SOL) Observations"]}<br>`;
+
+if (show.sop && row["SOP Compliance (SOP) Observations"])
+    block += `<b>SOP Compliance:</b> ${row["SOP Compliance (SOP) Observations"]}<br>`;
 
 block += `</div>`;
 
@@ -411,15 +400,24 @@ block += `</div>`;
 let agents = [];
 let weeks = [];
 
+
 // EXTRACT UNIQUE VALUES AFTER FILE LOAD
 function extractFilters() {
+
     const agentSet = new Set();
     const weekSet = new Set();
 
-    for (let i = 1; i < excelData.length; i++) {
-        if (excelData[i][10]) agentSet.add(excelData[i][10]);
-        if (excelData[i][6]) weekSet.add(excelData[i][6]);
-    }
+    excelData.forEach(row => {
+
+        if (row["Agent Name"]) {
+            agentSet.add(row["Agent Name"]);
+        }
+
+        if (row["Performance Week"]) {
+            weekSet.add(row["Performance Week"]);
+        }
+
+    });
 
     agents = [...agentSet].sort();
     weeks = [...weekSet].sort();
@@ -432,21 +430,34 @@ function setupDropdown(inputId, dropdownId, dataList) {
     input.addEventListener("input", function () {
         const query = this.value.toLowerCase();
 
-        if (query.length < 3) {
+        if (query.length < 2) {
             dropdown.style.display = "none";
             return;
         }
 
-        const filtered = dataList.filter(item =>
-            item.toLowerCase().includes(query)
-        );
+console.log("Dropdown source:", dataList.length);
+
+const filtered = dataList.filter(item => {
+
+    let text = item.toString().toLowerCase();
+
+    // 🔥 split names into words
+    let parts = text.split(/[\s,]+/);
+
+    // 🔥 match full text OR any word part
+    return (
+        text.includes(query) ||
+        parts.some(p => p.startsWith(query))
+    );
+
+});
 
         if (!filtered.length) {
             dropdown.style.display = "none";
             return;
         }
 
-        dropdown.innerHTML = filtered.slice(0, 50).map(item =>
+        dropdown.innerHTML = filtered.slice(0, 6).map(item =>
             `<div class="dropdown-item">${item}</div>`
         ).join("");
 
@@ -476,38 +487,12 @@ function toggleMode(){
 }
 
 function openTLModal() {
+
     document.getElementById("tlModal").style.display = "block";
-    document.getElementById("tlFilter").addEventListener("input", function () {
 
-    const val = this.value.toLowerCase();
-    const dropdown = document.getElementById("tlDropdown");
-    dropdown.innerHTML = "";
-
-    if (val.length < 3) {
-        dropdown.style.display = "none";
-        return;
-    }
-
-    let tlList = [...new Set(excelData.slice(1).map(r => r[15]))];
-
-    let filtered = tlList
-        .filter(tl => tl && tl.toLowerCase().includes(val))
-        .slice(0, 6);
-
-    dropdown.innerHTML = filtered.map(tl =>
-        `<div class="dropdown-item">${tl}</div>`
-    ).join("");
-
-    dropdown.style.display = "block";
-
-    document.querySelectorAll("#tlDropdown .dropdown-item").forEach(el => {
-        el.onclick = () => {
-            document.getElementById("tlFilter").value = el.innerText;
-            dropdown.style.display = "none";
-        };
-    });
-});
 }
+
+
 
 function closeTLModal() {
     document.getElementById("tlModal").style.display = "none";
@@ -577,10 +562,10 @@ function isIssue(val) {
     for (let i = 1; i < excelData.length; i++) {
         const row = excelData[i];
 
-        const agentCol = (row[10] || "").toLowerCase();
+const agentCol = (row["Agent Name"] || "").toLowerCase();
+let rawWeek = row["Performance Week"] || "";
+let match = rawWeek.toString().match(/\d+/);
 
-        let rawWeek = row[6] || "";
-        let match = rawWeek.toString().match(/\d+/);
         if (!match) continue;
 
         let weekCol = parseInt(match[0]);
@@ -591,16 +576,30 @@ function isIssue(val) {
         // count total cases
         weekData[weekCol].total++;
 
-        let score = parseFloat(row[53]) || 0;
+        let score = parseFloat(
+    (row["Total Score"] || "").replace("%","")
+) || 0;
+
         weekData[weekCol].score.push(score);
 
         // 🔥 STRICT CHECK (REAL FIX)
-if (isIssue(row[31])) weekData[weekCol].gbe++;
-if (isIssue(row[34])) weekData[weekCol].ecom++;
-if (isIssue(row[37])) weekData[weekCol].prob++;
-if (isIssue(row[40])) weekData[weekCol].root++;
-if (isIssue(row[43])) weekData[weekCol].sol++;
-if (isIssue(row[46])) weekData[weekCol].sop++;
+if (isIssue(row["Greeting & Basic Etiquette (GBE) Observations"]))
+    weekData[weekCol].gbe++;
+
+if (isIssue(row["Effective Communication (ECOM) Observations"]))
+    weekData[weekCol].ecom++;
+
+if (isIssue(row["Problem Identification (PROB) Observations"]))
+    weekData[weekCol].prob++;
+
+if (isIssue(row["Root Cause (ROOT) Observations"]))
+    weekData[weekCol].root++;
+
+if (isIssue(row["Solution (SOL) Observations"]))
+    weekData[weekCol].sol++;
+
+if (isIssue(row["SOP Compliance (SOP) Observations"]))
+    weekData[weekCol].sop++;
     }
 
     let labels = targetWeeks;
@@ -635,7 +634,7 @@ setTimeout(() => {
     renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score);
 }, 120);
 
-    renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score);
+    
 }
 function closeOverview() {
     document.getElementById("overviewModal").style.display = "none";
@@ -743,10 +742,12 @@ function processTL() {
 
         let row = excelData[i];
 
-        let tlCol = (row[15] || "").toLowerCase();
-        let agent = row[10] || "";
+let tlCol = (row["Team Leader Name"] || "").toLowerCase();
 
-        let rawWeek = row[6] || "";
+let agent = row["Agent Name"] || "";
+
+let rawWeek = row["Performance Week"] || "";
+ 
         let match = rawWeek.toString().match(/\d+/);
         if (!match) continue;
 
@@ -755,7 +756,10 @@ function processTL() {
         if (!tlCol.includes(tl)) continue;
         if (weekCol !== weekNum) continue;
 
-        let score = parseFloat(row[53]);
+        let score = parseFloat(
+    (row["Total Score"] || "").replace("%","")
+);
+
         if (isNaN(score)) continue;
 
         if (!agentMap[agent]) agentMap[agent] = [];
@@ -803,8 +807,74 @@ function processTL() {
     document.getElementById("tlResult").innerHTML = html;
 }
 
+window.addEventListener("load", () => {
+
+    console.log("excelData loaded:", excelData);
+
+    if (!excelData || !excelData.length) {
+        alert("190426.js failed to load.");
+        return;
+    }
+
+    extractFilters();
+
+    setupDropdown("agentFilter", "agentDropdown", agents);
 
 
+    // 🔥 TL dropdown listener
+    document.getElementById("tlFilter").addEventListener("input", function () {
+
+        const val = this.value.toLowerCase();
+        const dropdown = document.getElementById("tlDropdown");
+
+        dropdown.innerHTML = "";
+
+        if (val.length < 2) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        let tlList = [...new Set(excelData.map(r => r["Team Leader Name"]))];
+
+        let filtered = tlList.filter(tl => {
+
+            if (!tl) return false;
+
+            let text = tl.toLowerCase();
+            let parts = text.split(/[\s,]+/);
+
+            return (
+                text.includes(val) ||
+                parts.some(p => p.startsWith(val))
+            );
+
+        }).slice(0, 6);
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        dropdown.innerHTML = filtered.map(tl =>
+            `<div class="dropdown-item">${tl}</div>`
+        ).join("");
+
+        dropdown.style.display = "block";
+
+        document.querySelectorAll("#tlDropdown .dropdown-item").forEach(el => {
+
+            el.onclick = () => {
+                document.getElementById("tlFilter").value = el.innerText;
+                dropdown.style.display = "none";
+            };
+
+        });
+
+    });
+
+    alert("QA Data Uploaded!");
+
+});
 
 </script>
 
@@ -878,6 +948,7 @@ padding:20px;
 width:90%;
 max-width:800px;
 border-radius:10px;
+overflow: visible;
 ">
 
 <h2>Team Leader Overview</h2>
@@ -900,9 +971,14 @@ cursor:pointer;
     <div id="tlDropdown" class="dropdown"></div>
 </div>
 
-<div style="position:relative; flex:1;">
-    <input type="text" id="tlWeekFilter" placeholder="Search Week (10 to 19)">
-    <div id="tlWeekDropdown" class="dropdown"></div>
+<div style="flex:1;">
+    <input 
+        type="number"
+        id="tlWeekFilter"
+        placeholder="Week (10 - 19)"
+        min="10"
+        max="19"
+    >
 </div>
 
 <button onclick="processTL()">EXECUTE</button>
