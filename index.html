@@ -286,9 +286,9 @@ if (!agent.trim() || !week.trim()) {
     return;
 }
 
-let weekNum = parseInt(week, 15);
+let weekNum = parseInt(week, 10);
 
-if (isNaN(weekNum) || weekNum < 15) {
+if (isNaN(weekNum) || weekNum < 15 || weekNum > 19) {
     alert('Week must be "Week 15 and above"!');
     return;
 }
@@ -508,9 +508,9 @@ function showWeekOverview() {
         return;
     }
 
-    let selectedWeek = parseInt(weekInput, 15);
+    let selectedWeek = parseInt(weekInput, 10);
 
-    if (isNaN(selectedWeek) || selectedWeek < 15) {
+    if (isNaN(selectedWeek) || selectedWeek < 15 || selectedWeek > 19) {
         alert("Invalid week.");
         return;
     }
@@ -731,7 +731,7 @@ function processTL() {
 
     let weekNum = parseInt(week, 10);
 
-    if (isNaN(weekNum) || weekNum < 10) {
+    if (isNaN(weekNum) || weekNum < 15 || weekNum > 19) {
         alert("Invalid week.");
         return;
     }
