@@ -221,8 +221,8 @@ body {
     <input 
         type="number"
         id="weekFilter"
-        placeholder="Week (10 - 19)"
-        min="10"
+        placeholder="Week (15 - 19)"
+        min="15"
         max="19"
     >
 </div>
@@ -286,10 +286,10 @@ if (!agent.trim() || !week.trim()) {
     return;
 }
 
-let weekNum = parseInt(week, 10);
+let weekNum = parseInt(week, 15);
 
-if (isNaN(weekNum) || weekNum < 10) {
-    alert('Week must be "Week 10 and above"!');
+if (isNaN(weekNum) || weekNum < 15) {
+    alert('Week must be "Week 15 and above"!');
     return;
 }
 
@@ -508,9 +508,9 @@ function showWeekOverview() {
         return;
     }
 
-    let selectedWeek = parseInt(weekInput, 10);
+    let selectedWeek = parseInt(weekInput, 15);
 
-    if (isNaN(selectedWeek) || selectedWeek < 10) {
+    if (isNaN(selectedWeek) || selectedWeek < 15) {
         alert("Invalid week.");
         return;
     }
@@ -975,7 +975,7 @@ cursor:pointer;
     <input 
         type="number"
         id="tlWeekFilter"
-        placeholder="Week (10 - 19)"
+        placeholder="Week (15 - 19)"
         min="10"
         max="19"
     >
