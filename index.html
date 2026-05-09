@@ -83,10 +83,15 @@ button {
 }
 
 /* RESULT */
+#results{
+    margin-top:20px;
+}
+
 .result-block {
     border-bottom: 1px solid #ddd;
     padding: 10px;
     margin-bottom: 10px;
+    
 }
 
 /* DARK MODE */
@@ -108,6 +113,18 @@ body.dark input {
 body.dark .dropdown {
     background: #2a2a2a;
     color: #fff;
+}
+
+body.dark .result-block,
+body.dark .result-block p,
+body.dark .result-block span,
+body.dark .result-block div,
+body.dark .result-block b{
+    color: #f1f1f1 !important;
+}
+
+body.dark .result-block{
+    border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
 .dropdown {
@@ -192,6 +209,38 @@ body {
     overflow-x: hidden;
 }
 
+#stickyControls{
+    position: sticky;
+    top: 82px;
+    z-index: 999;
+
+    width: 90%;
+    max-width: 1100px;
+
+    margin: 90px auto 20px auto;
+
+    background: transparent;
+}
+
+#stickyControls .card{
+    margin-bottom: 0;
+    padding: 18px;
+    border-radius: 12px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+.container{
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto 40px auto;
+}
+
+/* premium floating effect */
+#stickyControls .card{
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+} 
+
 </style>
 </head>
 
@@ -206,11 +255,11 @@ body {
     <button class="mode-btn" onclick="toggleMode()">🌙</button>
 </header>
 
-<div class="container">
+<div id="stickyControls" class="search-container">
 
 <div class="card">
 
-<div style="display:flex; gap:12px; margin-top:10px; align-items:stretch;">
+<div style="display:flex; gap:11px; margin-top:0; align-items:stretch;">
 
     <div style="position:relative; flex:1;">
         <input type="text" id="agentFilter" placeholder="Search Agent">
@@ -263,7 +312,13 @@ body {
     <button onclick="openTLModal()">TL OVERVIEW</button>
 </div>
 
-<div id="results" class="card"></div>
+</div>
+
+</div>
+
+<div class="container">
+
+<div id="results"></div>
 
 </div>
 
@@ -507,6 +562,33 @@ function openTLModal() {
 
 function closeTLModal() {
     document.getElementById("tlModal").style.display = "none";
+}
+
+function openAgentFromTL(agentName, weekNum) {
+
+    // 🔥 close TL modal
+    closeTLModal();
+
+    // 🔥 auto-fill agent
+    document.getElementById("agentFilter").value = agentName;
+
+    // 🔥 auto-fill week
+    document.getElementById("weekFilter").value = weekNum;
+
+    // 🔥 auto-check ALL QA parameters
+    ["gbe", "ecom", "prob", "root", "sol", "sop"]
+    .forEach(id => {
+        document.getElementById(id).checked = true;
+    });
+
+    // 🔥 auto execute
+    processExcel();
+
+    // 🔥 smooth scroll to results
+window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+});
 }
 
 function showWeekOverview() {
@@ -754,7 +836,7 @@ function processTL() {
 
     let agentMap = {};
 
-    for (let i = 1; i < excelData.length; i++) {
+    for (let i = 0; i < excelData.length; i++) {
 
         let row = excelData[i];
 
@@ -762,19 +844,32 @@ let tlCol = (row["Team Leader Name"] || "").toLowerCase();
 
 let agent = row["Agent Name"] || "";
 
-let rawWeek = row["Performance Week"] || "";
- 
-        let match = rawWeek.toString().match(/\d+/);
-        if (!match) continue;
+let weekCol = parseInt(
+    row["Performance Week"]
+        .toString()
+        .replace(/[^\d]/g, ""),
+    10
+);
 
-        let weekCol = parseInt(match[0]);
+if (isNaN(weekCol)) continue;
 
-        if (!tlCol.includes(tl)) continue;
+        if (
+    !tlCol.trim().includes(
+        tl.trim()
+    )
+) continue;
         if (weekCol !== weekNum) continue;
 
-        let score = parseFloat(
-    (row["Total Score"] || "").replace("%","")
+let rawScore = row["Total Score"] || 0;
+
+let score = parseFloat(
+    rawScore.toString().replace("%","")
 );
+
+// 🔥 decimal to percentage
+if (score <= 1) {
+    score = score * 100;
+}
 
         if (isNaN(score)) continue;
 
@@ -786,7 +881,9 @@ let rawWeek = row["Performance Week"] || "";
 
     for (let agent in agentMap) {
         let scores = agentMap[agent];
-        let avg = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
+        let avg = (
+    scores.reduce((a,b)=>a+b,0) / scores.length
+).toFixed(2);
         agentAverages.push({ agent, avg });
     }
 
@@ -795,9 +892,10 @@ let rawWeek = row["Performance Week"] || "";
         return;
     }
 
-    let tlAvg = Math.round(
-        agentAverages.reduce((a,b)=>a + b.avg, 0) / agentAverages.length
-    );
+let tlAvg = (
+    agentAverages.reduce((a,b)=>a + parseFloat(b.avg), 0)
+    / agentAverages.length
+).toFixed(2);
 
     agentAverages.sort((a,b)=>b.avg - a.avg);
 
@@ -814,13 +912,29 @@ let rawWeek = row["Performance Week"] || "";
 
         return `
         <div style="display:flex;justify-content:space-between;padding:10px;margin-bottom:6px;background:#fff;border-radius:6px;border-left:5px solid ${color};">
-            <span>${a.agent}</span>
+            <span
+    onclick="openAgentFromTL('${a.agent.replace(/'/g, "\\'")}', ${weekNum})"
+    style="
+        cursor:pointer;
+        color:#ee4d2d;
+        font-weight:600;
+        transition:0.2s;
+    "
+    onmouseover="this.style.textDecoration='underline'"
+    onmouseout="this.style.textDecoration='none'"
+>
+    ${a.agent}
+</span>
             <b>${a.avg}%</b>
         </div>
         `;
     }).join("");
 
-    document.getElementById("tlResult").innerHTML = html;
+console.log(agentAverages);
+console.log("TL AVG:", tlAvg);
+
+document.getElementById("tlResult").innerHTML = html;
+
 }
 
 window.addEventListener("load", () => {
