@@ -325,11 +325,22 @@ const weekCol = (row["Performance Week"] || "").toLowerCase();
 let caseId = row["Case ID"] || "N/A";
 
 // parse score properly
-let rawScore = row["Total Score"] || "";
+let rawScore = row["Total Score"] || 0;
+
 let scoreNum = parseFloat(
     rawScore.toString().replace("%","")
 );
-let score = !isNaN(scoreNum) ? Math.round(scoreNum) + "%" : "N/A";
+
+// 🔥 convert decimal scores into percentage
+if (scoreNum <= 1) {
+    scoreNum = scoreNum * 100;
+}
+
+// 🔥 preserve decimals
+let score = !isNaN(scoreNum)
+    ? scoreNum.toFixed(2) + "%"
+    : "N/A";
+
 
 let bgColor = "";
 let textColor = "";
@@ -576,9 +587,14 @@ let match = rawWeek.toString().match(/\d+/);
         // count total cases
         weekData[weekCol].total++;
 
-        let score = parseFloat(
-    (row["Total Score"] || "").replace("%","")
+let score = parseFloat(
+    (row["Total Score"] || "0").toString().replace("%","")
 ) || 0;
+
+// 🔥 convert decimal format
+if (score <= 1) {
+    score = score * 100;
+}
 
         weekData[weekCol].score.push(score);
 
