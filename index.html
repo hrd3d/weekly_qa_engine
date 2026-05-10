@@ -844,15 +844,18 @@ let tlCol = (row["Team Leader Name"] || "").toLowerCase();
 
 let agent = row["Agent Name"] || "";
 
+let rawWeek = row["Performance Week"] || "";
+
+let weekMatch = rawWeek
+    .toString()
+    .match(/\d+/);
+
+if (!weekMatch) continue;
+
 let weekCol = parseInt(
-    row["Performance Week"]
-        .toString()
-        .replace(/[^\d]/g, ""),
+    weekMatch[0],
     10
 );
-
-if (isNaN(weekCol)) continue;
-
         if (
     !tlCol.trim().includes(
         tl.trim()
