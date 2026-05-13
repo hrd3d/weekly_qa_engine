@@ -289,11 +289,11 @@ body {
     </label>
 
     <label style="display:flex;align-items:center;gap:5px;">
-        <input type="checkbox" id="prob"> PROB
+        <input type="checkbox" id="prob"> GI
     </label>
 
     <label style="display:flex;align-items:center;gap:5px;">
-        <input type="checkbox" id="root"> ROOT
+        <input type="checkbox" id="root"> COMP
     </label>
 
     <label style="display:flex;align-items:center;gap:5px;">
@@ -433,23 +433,23 @@ let block = `<div class="result-block">
 <br>
 `;
 
-if (show.gbe && row["Greeting & Basic Etiquette (GBE) Observations"])
-    block += `<b>Greetings and Basic Etiquette:</b> ${row["Greeting & Basic Etiquette (GBE) Observations"]}<br>`;
+if (show.gbe && row["Greeting & Etiquette (GE) Observations"])
+    block += `<b>Greetings and Etiquette:</b> ${row["Greeting & Etiquette (GE) Observations"]}<br>`;
 
-if (show.ecom && row["Effective Communication (ECOM) Observations"])
-    block += `<b>Effective Communication:</b> ${row["Effective Communication (ECOM) Observations"]}<br>`;
+if (show.ecom && row["Effective Communication (EC) Observations"])
+    block += `<b>Effective Communication:</b> ${row["Effective Communication (EC) Observations"]}<br>`;
 
-if (show.prob && row["Problem Identification (PROB) Observations"])
-    block += `<b>Problem Identification:</b> ${row["Problem Identification (PROB) Observations"]}<br>`;
+if (show.prob && row["Gathering Information (GI) Observations"])
+    block += `<b>Gathering Information:</b> ${row["Gathering Information (GI) Observations"]}<br>`;
 
-if (show.root && row["Root Cause (ROOT) Observations"])
-    block += `<b>Root Cause:</b> ${row["Root Cause (ROOT) Observations"]}<br>`;
+if (show.root && row["Comprehension of the Problem (CP) Observations"])
+    block += `<b>Comprehension of the Problem:</b> ${row["Comprehension of the Problem (CP) Observations"]}<br>`;
 
-if (show.sol && row["Solution (SOL) Observations"])
-    block += `<b>Solution:</b> ${row["Solution (SOL) Observations"]}<br>`;
+if (show.sol && row["Solution (S) Observations"])
+    block += `<b>Solution:</b> ${row["Solution (S) Observations"]}<br>`;
 
-if (show.sop && row["SOP Compliance (SOP) Observations"])
-    block += `<b>SOP Compliance:</b> ${row["SOP Compliance (SOP) Observations"]}<br>`;
+if (show.sop && row["SOP Compliance (SC) Observations"])
+    block += `<b>SOP Compliance:</b> ${row["SOP Compliance (SC) Observations"]}<br>`;
 
 block += `</div>`;
 
@@ -681,22 +681,22 @@ if (score <= 1) {
         weekData[weekCol].score.push(score);
 
         // 🔥 STRICT CHECK (REAL FIX)
-if (isIssue(row["Greeting & Basic Etiquette (GBE) Observations"]))
+if (isIssue(row["Greeting & Etiquette (GE) Observations"]))
     weekData[weekCol].gbe++;
 
-if (isIssue(row["Effective Communication (ECOM) Observations"]))
+if (isIssue(row["Effective Communication (EC) Observations"]))
     weekData[weekCol].ecom++;
 
-if (isIssue(row["Problem Identification (PROB) Observations"]))
+if (isIssue(row["Gathering Information (GI) Observations"]))
     weekData[weekCol].prob++;
 
-if (isIssue(row["Root Cause (ROOT) Observations"]))
+if (isIssue(row["Comprehension of the Problem (CP) Observations"]))
     weekData[weekCol].root++;
 
-if (isIssue(row["Solution (SOL) Observations"]))
+if (isIssue(row["Solution (S) Observations"]))
     weekData[weekCol].sol++;
 
-if (isIssue(row["SOP Compliance (SOP) Observations"]))
+if (isIssue(row["SOP Compliance (SC) Observations"]))
     weekData[weekCol].sop++;
     }
 
@@ -752,8 +752,8 @@ function renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score) {
             datasets: [
                 { label: 'GBE', data: gbe, borderColor: '#4dabf7', tension: 0.4 },
                 { label: 'ECOM', data: ecom, borderColor: '#51cf66', tension: 0.4 },
-                { label: 'PROB', data: prob, borderColor: '#ffd43b', tension: 0.4 },
-                { label: 'ROOT', data: root, borderColor: '#845ef7', tension: 0.4 },
+                { label: 'GI', data: prob, borderColor: '#ffd43b', tension: 0.4 },
+                { label: 'COMP', data: root, borderColor: '#845ef7', tension: 0.4 },
                 { label: 'SOL', data: sol, borderColor: '#ff6b6b', tension: 0.4 },
                 { label: 'SOP', data: sop, borderColor: '#f783ac', tension: 0.4 }
             ]
