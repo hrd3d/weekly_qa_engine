@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopeePH | Ambassador QA Engine (AUTO QA)</title>
+<link rel="icon" href="logo.png">
+<link rel="shortcut icon" href="logo.png">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="01new_0626_23_1.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+/* HEADER */
+header {
+    background: #ee4d2d;
+    color: white;
+    padding: 20px 30px; /* 🔥 add left/right space */
+    font-size: 20px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    z-index: 1000;
+}
+
+header {
+    box-sizing: border-box; /* 🔥 prevents overflow */
+}
+
+
+/* CONTAINER */
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 90px auto;
+}
+
+/* CARD */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* INPUTS */
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+
+/* CHECKBOX */
+label {
+    margin-right: 10px;
+}
+
+/* BUTTON */
+button {
+    padding: 10px;
+    background: #ee4d2d;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* RESULT */
+#results{
+    margin-top:20px;
+}
+
+.result-block {
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    
+}
+
+/* DARK MODE */
+body.dark {
+    background: #121212;
+}
+
+body.dark .card {
+    background: #1e1e1e;
+    color: #eee;
+}
+
+body.dark input {
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+body.dark .dropdown {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+body.dark .result-block,
+body.dark .result-block p,
+body.dark .result-block span,
+body.dark .result-block div,
+body.dark .result-block b{
+    color: #f1f1f1 !important;
+}
+
+body.dark .result-block{
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.dropdown {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+    box-sizing: border-box;
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #ee4d2d;
+    color: white;
+}
+
+.mode-btn {
+    border: 2px solid #888;
+    background: transparent;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px; /* square with slight rounding */
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 18px;
+    transition: 0.2s;
+
+}
+
+.mode-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.card > div[style*="display:flex"] > div {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes pulseRed {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69, 0.6);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 10px rgba(220,53,69, 0.9);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69, 0.6);
+    }
+}
+
+.pulse-red {
+    animation: pulseRed 1.8s ease-in-out infinite;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 260px;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+#stickyControls{
+    position: sticky;
+    top: 82px;
+    z-index: 999;
+
+    width: 90%;
+    max-width: 1100px;
+
+    margin: 90px auto 20px auto;
+
+    background: transparent;
+}
+
+#stickyControls .card{
+    margin-bottom: 0;
+    padding: 18px;
+    border-radius: 12px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+.container{
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto 40px auto;
+}
+
+/* premium floating effect */
+#stickyControls .card{
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+} 
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <img src="logo.png" style="height:40px;">
+        <span>SupportZebra x Shopee Philippines | AMBASSADOR QA ENGINE (AUTO QA)</span>
+    </div>
+
+    <button class="mode-btn" onclick="toggleMode()">🌙</button>
+</header>
+
+<div id="stickyControls" class="search-container">
+
+<div class="card">
+
+<div style="display:flex; gap:11px; margin-top:0; align-items:stretch;">
+
+    <div style="position:relative; flex:1;">
+        <input type="text" id="agentFilter" placeholder="Search Agent">
+        <div id="agentDropdown" class="dropdown"></div>
+    </div>
+
+<div style="flex:1;">
+    <input 
+        type="number"
+        id="weekFilter"
+        placeholder="Week (19 - 23)"
+        min="19"
+        max="23"
+    >
+</div>
+
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;">
+    
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="gbe"> GBE
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="ecom"> ECOM
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="prob"> GI
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="root"> COMP
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="sol"> SOL
+    </label>
+
+    <label style="display:flex;align-items:center;gap:5px;">
+        <input type="checkbox" id="sop"> SOP
+    </label>
+
+</div>
+
+<div style="display:flex; gap:10px;">
+    <button onclick="processExcel()">EXECUTE</button>
+    <button onclick="showWeekOverview()">AGENT OVERVIEW</button>
+    <button onclick="openTLModal()">TL OVERVIEW</button>
+
+    <button
+        onclick="window.location.href='legacy.html'"
+        style="
+            background:#0d6efd;
+            color:white;
+        ">
+        SWITCH TO LEGACY QA
+    </button>
+</div>
+
+</div>
+
+</div>
+
+<div class="container">
+
+<div id="results"></div>
+
+</div>
+
+<script>
+
+
+// PROCESS
+function processExcel() {
+
+    if (!excelData.length) {
+        alert("QA data not loaded.");
+        return;
+    }
+
+    const agent = document.getElementById("agentFilter").value.toLowerCase();
+    const week = document.getElementById("weekFilter").value.toLowerCase();
+
+if (!agent.trim() || !week.trim()) {
+    alert('Both "Agent Name" and "Week Performance" are required.');
+    return;
+}
+
+let weekNum = parseInt(week, 10);
+
+if (isNaN(weekNum) || weekNum < 19 || weekNum > 23) {
+    alert('Performance Week must be 19 to 23!');
+    return;
+}
+
+    const show = {
+        gbe: document.getElementById("gbe").checked,
+        ecom: document.getElementById("ecom").checked,
+        prob: document.getElementById("prob").checked,
+        root: document.getElementById("root").checked,
+        sol: document.getElementById("sol").checked,
+        sop: document.getElementById("sop").checked
+    };
+
+const anyChecked = Object.values(show).some(v => v);
+
+if (!anyChecked) {
+    alert("Select at least one parameter (GBE, ECOM, etc.)");
+    return;
+}
+
+    let output = "";
+
+   for (let i = 0; i < excelData.length; i++) {
+
+const row = excelData[i];
+
+const agentCol = (row["Agent Name"] || "").toLowerCase();
+
+const weekCol = (row["Performance Week"] || "").toLowerCase();
+
+        if (!agentCol.includes(agent)) continue;
+        if (!weekCol.includes(week)) continue;
+
+let caseId = row["Case ID"] || "N/A";
+
+// parse score properly
+let rawScore = row["Total Score"] || 0;
+
+let scoreNum = parseFloat(
+    rawScore.toString().replace("%","")
+);
+
+// 🔥 convert decimal scores into percentage
+if (scoreNum <= 1) {
+    scoreNum = scoreNum * 100;
+}
+
+// 🔥 preserve decimals
+let score = !isNaN(scoreNum)
+    ? scoreNum.toFixed(2) + "%"
+    : "N/A";
+
+
+let bgColor = "";
+let textColor = "";
+
+if (!isNaN(scoreNum)) {
+    if (scoreNum <= 75) {
+        bgColor = "#dc3545"; // red
+        textColor = "white";
+    } else if (scoreNum <= 90) {
+        bgColor = "#fd7e14"; // orange
+        textColor = "white";
+    } else {
+        bgColor = "#28a745"; // green
+        textColor = "white";
+    }
+}
+
+// 🔥 styles
+let isCritical = scoreNum <= 75;
+
+let headerClass = isCritical ? "pulse-red" : "";
+
+let headerStyle = bgColor
+    ? `background:${bgColor};color:${textColor};padding:6px;border-radius:4px;`
+    : "";
+
+let block = `<div class="result-block">
+
+<div class="${headerClass}" style="${headerStyle}">
+<b>Case ID:</b>
+<a href="https://cs.shopee.ph/portal/inhouse/agent-case/detail/${caseId}" target="_blank" style="color:inherit; text-decoration:underline;">${caseId}
+</a>| <b>QA Score:</b> ${score}
+</div>
+
+<br>
+`;
+
+if (show.gbe && row["Greeting & Etiquette (GE) Observations"])
+    block += `<b>Greetings and Etiquette:</b> ${row["Greeting & Etiquette (GE) Observations"]}<br>`;
+
+if (show.ecom && row["Effective Communication (EC) Observations"])
+    block += `<b>Effective Communication:</b> ${row["Effective Communication (EC) Observations"]}<br>`;
+
+if (show.prob && row["Gathering Information (GI) Observations"])
+    block += `<b>Gathering Information:</b> ${row["Gathering Information (GI) Observations"]}<br>`;
+
+if (show.root && row["Comprehension of the Problem (CP) Observations"])
+    block += `<b>Comprehension of the Problem:</b> ${row["Comprehension of the Problem (CP) Observations"]}<br>`;
+
+if (show.sol && row["Solution (S) Observations"])
+    block += `<b>Solution:</b> ${row["Solution (S) Observations"]}<br>`;
+
+if (show.sop && row["SOP Compliance (SC) Observations"])
+    block += `<b>SOP Compliance:</b> ${row["SOP Compliance (SC) Observations"]}<br>`;
+
+block += `</div>`;
+
+
+        output += block;
+    }
+
+    document.getElementById("results").innerHTML =
+        output || "No matching data.";
+}
+
+// DARK MODE
+
+let agents = [];
+let weeks = [];
+
+
+// EXTRACT UNIQUE VALUES AFTER FILE LOAD
+function extractFilters() {
+
+    const agentSet = new Set();
+    const weekSet = new Set();
+
+    excelData.forEach(row => {
+
+        if (row["Agent Name"]) {
+            agentSet.add(row["Agent Name"]);
+        }
+
+        if (row["Performance Week"]) {
+            weekSet.add(row["Performance Week"]);
+        }
+
+    });
+
+    agents = [...agentSet].sort();
+    weeks = [...weekSet].sort();
+}
+
+function setupDropdown(inputId, dropdownId, dataList) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    input.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+
+        if (query.length < 2) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+console.log("Dropdown source:", dataList.length);
+
+const filtered = dataList.filter(item => {
+
+    let text = item.toString().toLowerCase();
+
+    // 🔥 split names into words
+    let parts = text.split(/[\s,]+/);
+
+    // 🔥 match full text OR any word part
+    return (
+        text.includes(query) ||
+        parts.some(p => p.startsWith(query))
+    );
+
+});
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        dropdown.innerHTML = filtered.slice(0, 6).map(item =>
+            `<div class="dropdown-item">${item}</div>`
+        ).join("");
+
+        dropdown.style.display = "block";
+
+        document.querySelectorAll(`#${dropdownId} .dropdown-item`)
+            .forEach(el => {
+                el.onclick = () => {
+                    input.value = el.innerText;
+                    dropdown.style.display = "none";
+                };
+            });
+    });
+
+    document.addEventListener("click", function (e) {
+        if (!e.target.closest(`#${inputId}`) && !e.target.closest(`#${dropdownId}`)) {
+            dropdown.style.display = "none";
+        }
+    });
+}
+
+function toggleMode(){
+    document.body.classList.toggle("dark");
+
+    const btn = document.querySelector(".mode-btn");
+    btn.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+}
+
+function openTLModal() {
+
+    document.getElementById("tlModal").style.display = "block";
+
+}
+
+
+
+function closeTLModal() {
+    document.getElementById("tlModal").style.display = "none";
+}
+
+function openAgentFromTL(agentName, weekNum) {
+
+    // 🔥 close TL modal
+    closeTLModal();
+
+    // 🔥 auto-fill agent
+    document.getElementById("agentFilter").value = agentName;
+
+    // 🔥 auto-fill week
+    document.getElementById("weekFilter").value = weekNum;
+
+    // 🔥 auto-check ALL QA parameters
+    ["gbe", "ecom", "prob", "root", "sol", "sop"]
+    .forEach(id => {
+        document.getElementById(id).checked = true;
+    });
+
+    // 🔥 auto execute
+    processExcel();
+
+    // 🔥 smooth scroll to results
+window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+});
+}
+
+function showWeekOverview() {
+
+    const agent = document.getElementById("agentFilter").value.toLowerCase();
+    const weekInput = document.getElementById("weekFilter").value;
+
+    if (!agent || !weekInput) {
+        alert("Agent and Week required.");
+        return;
+    }
+
+    let selectedWeek = parseInt(weekInput, 10);
+
+    if (isNaN(selectedWeek) || selectedWeek < 19 || selectedWeek > 23) {
+        alert("Performance Week must be 19 to 23!");
+        return;
+    }
+
+    let targetWeeks = [
+        selectedWeek - 3,
+        selectedWeek - 2,
+        selectedWeek - 1,
+        selectedWeek
+    ];
+
+    let weekData = {};
+
+    targetWeeks.forEach(w => {
+        weekData[w] = {
+            total: 0,
+            gbe: 0,
+            ecom: 0,
+            prob: 0,
+            root: 0,
+            sol: 0,
+            sop: 0,
+            score: []
+        };
+    });
+
+function isIssue(val) {
+    if (!val) return false;
+
+    let text = val.toString().toLowerCase().trim();
+
+    // 🔥 KEYWORDS THAT INDICATE REAL QA ISSUE
+    return (
+        text !== "n/a" &&
+        text !== "" &&
+        text !== "na" &&
+        (
+            text.includes("miss") ||
+            text.includes("fail") ||
+            text.includes("incorrect") ||
+            text.includes("no ") ||
+            text.includes("lack") ||
+            text.includes("error")
+        )
+    );
+}
+
+    // 🔥 LOOP
+    for (let i = 1; i < excelData.length; i++) {
+        const row = excelData[i];
+
+const agentCol = (row["Agent Name"] || "").toLowerCase();
+let rawWeek = row["Performance Week"] || "";
+let match = rawWeek.toString().match(/\d+/);
+
+        if (!match) continue;
+
+        let weekCol = parseInt(match[0]);
+
+        if (!agentCol.includes(agent)) continue;
+        if (!targetWeeks.includes(weekCol)) continue;
+
+        // count total cases
+        weekData[weekCol].total++;
+
+let score = parseFloat(
+    (row["Total Score"] || "0").toString().replace("%","")
+) || 0;
+
+// 🔥 convert decimal format
+if (score <= 1) {
+    score = score * 100;
+}
+
+        weekData[weekCol].score.push(score);
+
+        // 🔥 STRICT CHECK (REAL FIX)
+if (isIssue(row["Greeting & Etiquette (GE) Observations"]))
+    weekData[weekCol].gbe++;
+
+if (isIssue(row["Effective Communication (EC) Observations"]))
+    weekData[weekCol].ecom++;
+
+if (isIssue(row["Gathering Information (GI) Observations"]))
+    weekData[weekCol].prob++;
+
+if (isIssue(row["Comprehension of the Problem (CP) Observations"]))
+    weekData[weekCol].root++;
+
+if (isIssue(row["Solution (S) Observations"]))
+    weekData[weekCol].sol++;
+
+if (isIssue(row["SOP Compliance (SC) Observations"]))
+    weekData[weekCol].sop++;
+    }
+
+    let labels = targetWeeks;
+
+    function avg(arr) {
+        if (!arr.length) return 0;
+        return Math.round(arr.reduce((a,b)=>a+b,0) / arr.length);
+    }
+
+    // 🔥 BUILD ARRAYS
+function percent(value, total) {
+    if (!total) return 0;
+
+    let rate = (value / total) * 100;
+
+    return Math.min(100, Math.max(0, Math.round(rate)));
+}
+
+let gbe = labels.map(w => percent(weekData[w].gbe, weekData[w].total));
+let ecom = labels.map(w => percent(weekData[w].ecom, weekData[w].total));
+let prob = labels.map(w => percent(weekData[w].prob, weekData[w].total));
+let root = labels.map(w => percent(weekData[w].root, weekData[w].total));
+let sol  = labels.map(w => percent(weekData[w].sol, weekData[w].total));
+let sop  = labels.map(w => percent(weekData[w].sop, weekData[w].total));
+
+let score = labels.map(w => avg(weekData[w].score));
+
+document.getElementById("overviewModal").style.display = "block";
+
+// 🔥 SINGLE render (correct timing)
+setTimeout(() => {
+    renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score);
+}, 120);
+
+    
+}
+function closeOverview() {
+    document.getElementById("overviewModal").style.display = "none";
+}
+
+let trendChart, volumeChart;
+
+function renderOverviewCharts(labels, gbe, ecom, prob, root, sol, sop, score) {
+
+    // 🔵 TOP CHART
+    if (trendChart) trendChart.destroy();
+
+    trendChart = new Chart(document.getElementById("trendChart"), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'GBE', data: gbe, borderColor: '#4dabf7', tension: 0.4 },
+                { label: 'ECOM', data: ecom, borderColor: '#51cf66', tension: 0.4 },
+                { label: 'GI', data: prob, borderColor: '#ffd43b', tension: 0.4 },
+                { label: 'COMP', data: root, borderColor: '#845ef7', tension: 0.4 },
+                { label: 'SOL', data: sol, borderColor: '#ff6b6b', tension: 0.4 },
+                { label: 'SOP', data: sop, borderColor: '#f783ac', tension: 0.4 }
+            ]
+        },
+       options: {
+    responsive: true,
+maintainAspectRatio: false,
+    scales: {
+       y: {
+    beginAtZero: true,
+    max: 100,
+    title: {
+        display: true,
+        text: 'Error Rate (%)'
+    }
+},
+        x: {
+            grid: {
+                display: false
+            }
+        }
+    }
+}
+    });
+
+    // 🟢 BOTTOM CHART
+if (volumeChart) volumeChart.destroy();
+    volumeChart = new Chart(document.getElementById("volumeChart"), {
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                type: 'bar',
+                label: 'Average QA Score (%)',
+                data: score,
+                backgroundColor: '#2f9e44',
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            x: {
+                grid: { display: false }
+            },
+            y: {
+                beginAtZero: true,
+                max: 100, // 🔥 IMPORTANT (since it's %)
+                grid: { display: false },
+                title: {
+                    display: true,
+                    text: 'QA Score (%)'
+                }
+            }
+        }
+    }
+});
+}
+
+function processTL() {
+
+    const tl = document.getElementById("tlFilter").value.toLowerCase();
+    const week = document.getElementById("tlWeekFilter").value;
+
+    if (!tl || !week) {
+        alert("TL and Week required.");
+        return;
+    }
+
+    let weekNum = parseInt(week, 10);
+
+    if (isNaN(weekNum) || weekNum < 19 || weekNum > 23) {
+        alert("Performance Week must be 19 to 23");
+        return;
+    }
+
+    let agentMap = {};
+
+    for (let i = 0; i < excelData.length; i++) {
+
+        let row = excelData[i];
+
+let tlCol = (row["Team Leader Name"] || "").toLowerCase();
+
+let agent = row["Agent Name"] || "";
+
+let rawWeek = row["Performance Week"] || "";
+
+let weekMatch = rawWeek
+    .toString()
+    .match(/\d+/);
+
+if (!weekMatch) continue;
+
+let weekCol = parseInt(
+    weekMatch[0],
+    10
+);
+        if (
+    !tlCol.trim().includes(
+        tl.trim()
+    )
+) continue;
+        if (weekCol !== weekNum) continue;
+
+let rawScore = row["Total Score"] || 0;
+
+let score = parseFloat(
+    rawScore.toString().replace("%","")
+);
+
+// 🔥 decimal to percentage
+if (score <= 1) {
+    score = score * 100;
+}
+
+        if (isNaN(score)) continue;
+
+        if (!agentMap[agent]) agentMap[agent] = [];
+        agentMap[agent].push(score);
+    }
+
+    let agentAverages = [];
+
+    for (let agent in agentMap) {
+        let scores = agentMap[agent];
+        let avg = (
+    scores.reduce((a,b)=>a+b,0) / scores.length
+).toFixed(2);
+        agentAverages.push({ agent, avg });
+    }
+
+    if (!agentAverages.length) {
+        document.getElementById("tlResult").innerHTML = "No data found.";
+        return;
+    }
+
+let tlAvg = (
+    agentAverages.reduce((a,b)=>a + parseFloat(b.avg), 0)
+    / agentAverages.length
+).toFixed(2);
+
+    agentAverages.sort((a,b)=>b.avg - a.avg);
+
+    let html = `
+    <div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:15px;font-weight:bold;">
+        Team Leader Average Score: ${tlAvg}%
+    </div>
+    `;
+
+    html += agentAverages.map(a => {
+        let color = a.avg >= 90 ? "#28a745" :
+                    a.avg >= 75 ? "#fd7e14" :
+                    "#dc3545";
+
+        return `
+        <div style="display:flex;justify-content:space-between;padding:10px;margin-bottom:6px;background:#fff;border-radius:6px;border-left:5px solid ${color};">
+            <span
+    onclick="openAgentFromTL('${a.agent.replace(/'/g, "\\'")}', ${weekNum})"
+    style="
+        cursor:pointer;
+        color:#ee4d2d;
+        font-weight:600;
+        transition:0.2s;
+    "
+    onmouseover="this.style.textDecoration='underline'"
+    onmouseout="this.style.textDecoration='none'"
+>
+    ${a.agent}
+</span>
+            <b>${a.avg}%</b>
+        </div>
+        `;
+    }).join("");
+
+console.log(agentAverages);
+console.log("TL AVG:", tlAvg);
+
+document.getElementById("tlResult").innerHTML = html;
+
+}
+
+window.addEventListener("load", () => {
+
+    console.log("excelData loaded:", excelData);
+
+    if (!excelData || !excelData.length) {
+        alert("190426.js failed to load.");
+        return;
+    }
+
+    extractFilters();
+
+    setupDropdown("agentFilter", "agentDropdown", agents);
+
+
+    // 🔥 TL dropdown listener
+    document.getElementById("tlFilter").addEventListener("input", function () {
+
+        const val = this.value.toLowerCase();
+        const dropdown = document.getElementById("tlDropdown");
+
+        dropdown.innerHTML = "";
+
+        if (val.length < 2) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        let tlList = [...new Set(excelData.map(r => r["Team Leader Name"]))];
+
+        let filtered = tlList.filter(tl => {
+
+            if (!tl) return false;
+
+            let text = tl.toLowerCase();
+            let parts = text.split(/[\s,]+/);
+
+            return (
+                text.includes(val) ||
+                parts.some(p => p.startsWith(val))
+            );
+
+        }).slice(0, 6);
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        dropdown.innerHTML = filtered.map(tl =>
+            `<div class="dropdown-item">${tl}</div>`
+        ).join("");
+
+        dropdown.style.display = "block";
+
+        document.querySelectorAll("#tlDropdown .dropdown-item").forEach(el => {
+
+            el.onclick = () => {
+                document.getElementById("tlFilter").value = el.innerText;
+                dropdown.style.display = "none";
+            };
+
+        });
+
+    });
+
+    alert("QA Data Uploaded!");
+
+});
+
+</script>
+
+<div id="overviewModal" style="
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    z-index:2000;
+    overflow:hidden; /* 🔥 REMOVE SCROLL */
+">
+
+<div style="
+    background:#fff;
+    margin:20px auto;
+    padding:20px;
+    width:95%;
+    max-width:900px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+">
+
+<h2>Weekly Overview</h2>
+<button onclick="closeOverview()" style="
+    align-self:flex-start;
+    padding:6px 14px;
+    font-size:14px;
+    border:none;
+    border-radius:6px;
+    background:#f04b2f;
+    color:#fff;
+    cursor:pointer;
+">
+    Close
+</button>
+
+<div style="
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+">
+
+<div class="chart-container">
+    <canvas id="trendChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <canvas id="volumeChart"></canvas>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<div id="tlModal" style="
+display:none;
+position:fixed;
+top:0; left:0;
+width:100%; height:100%;
+background:rgba(0,0,0,0.7);
+z-index:3000;
+">
+
+<div style="
+background:#fff;
+margin:20px auto;
+padding:20px;
+width:90%;
+max-width:800px;
+border-radius:10px;
+overflow: visible;
+">
+
+<h2>Team Leader Overview</h2>
+
+<button onclick="closeTLModal()" style="
+padding:6px 14px;
+background:#f04b2f;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+">Close</button>
+
+<br><br>
+
+<div style="display:flex; gap:10px;">
+
+<div style="position:relative; flex:1;">
+    <input type="text" id="tlFilter" placeholder="Search TL Name">
+    <div id="tlDropdown" class="dropdown"></div>
+</div>
+
+<div style="flex:1;">
+    <input 
+        type="number"
+        id="tlWeekFilter"
+        placeholder="Week (19 - 23)"
+        min="19"
+        max="23"
+    >
+</div>
+
+<button onclick="processTL()">EXECUTE</button>
+
+</div>
+
+<br>
+
+<div id="tlResult"></div>
+
+</div>
+</div>
+
+</body>
+</html>
