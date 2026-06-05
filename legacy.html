@@ -8,7 +8,7 @@
 <link rel="shortcut icon" href="logo.png">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="legacy.js"></script>
+<script src="old.js"></script>
 
 <style>
 body {
@@ -307,14 +307,22 @@ body {
 </div>
 
 <div style="display:flex; gap:10px;">
-    <button onclick="processExcel()">EXECUTE</button>
+    <button
+    onclick="processExcel()"
+    style="
+        background:#198754;
+        color:white;
+        font-weight:600;
+    ">
+    EXECUTE
+</button>
     <button onclick="showWeekOverview()">AGENT OVERVIEW</button>
     <button onclick="openTLModal()">TL OVERVIEW</button>
 
     <button
         onclick="window.location.href='auto.html'"
         style="
-            background:#198754;
+            background:#4169E1;
             color:white;
         ">
         SWITCH TO AUTO QA
@@ -568,6 +576,26 @@ function openTLModal() {
 
 function closeTLModal() {
     document.getElementById("tlModal").style.display = "none";
+}
+
+function openAgentFromTL(agentName, weekNum) {
+
+    closeTLModal();
+
+    document.getElementById("agentFilter").value = agentName;
+    document.getElementById("weekFilter").value = weekNum;
+
+    ["gbe", "ecom", "prob", "root", "sol", "sop"]
+    .forEach(id => {
+        document.getElementById(id).checked = true;
+    });
+
+    processExcel();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
 
 function showWeekOverview() {
@@ -889,12 +917,32 @@ let tlAvg = (
                     a.avg >= 75 ? "#fd7e14" :
                     "#dc3545";
 
-        return `
-        <div style="display:flex;justify-content:space-between;padding:10px;margin-bottom:6px;background:#fff;border-radius:6px;border-left:5px solid ${color};">
-            <span>${a.agent}</span>
-            <b>${a.avg}%</b>
-        </div>
-        `;
+return `
+<div style="
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin-bottom:6px;
+    background:#fff;
+    border-radius:6px;
+    border-left:5px solid ${color};
+">
+    <span
+        onclick="openAgentFromTL('${a.agent.replace(/'/g, "\\'")}', ${weekNum})"
+        style="
+            cursor:pointer;
+            color:#ee4d2d;
+            font-weight:600;
+        "
+        onmouseover="this.style.textDecoration='underline'"
+        onmouseout="this.style.textDecoration='none'"
+    >
+        ${a.agent}
+    </span>
+
+    <b>${a.avg}%</b>
+</div>
+`;
     }).join("");
 
 console.log(agentAverages);
