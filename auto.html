@@ -145,7 +145,7 @@ body.dark .result-block{
 }
 
 .dropdown-item:hover {
-    background: #ee4d2d;
+    background: #157347;
     color: white;
 }
 
@@ -307,14 +307,22 @@ body {
 </div>
 
 <div style="display:flex; gap:10px;">
-    <button onclick="processExcel()">EXECUTE</button>
+    <button
+    onclick="processExcel()"
+    style="
+        background:#198754;
+        color:white;
+        font-weight:600;
+    ">
+    EXECUTE
+</button>
     <button onclick="showWeekOverview()">AGENT OVERVIEW</button>
     <button onclick="openTLModal()">TL OVERVIEW</button>
 
     <button
         onclick="window.location.href='legacy.html'"
         style="
-            background:#0d6efd;
+            background:#4169E1;
             color:white;
         ">
         SWITCH TO LEGACY QA
